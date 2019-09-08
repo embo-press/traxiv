@@ -1,0 +1,4 @@
+requests
+pymongo[tls,srv]
+python-dotenv
+hypothepy
