@@ -148,7 +148,7 @@ class Traxiv:
             preprint = Preprint(**row['preprint'])
             annotation = HypoPost(**row['annotation'])
             progress(i, N, f"{preprint.biorxiv_doi}           ")
-            target = Target(preprint.biorxiv_url, preprint.preprint_title)
+            target = Target(preprint.biorxiv_url, preprint.biorxiv_doi, preprint.preprint_title)
             response = post_one(permissions, groupid, target, annotation)
             if response.status_code == 200:
                 hyp_id = response.json()['id']

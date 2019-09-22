@@ -110,10 +110,12 @@ class Target:
 
     Arguments:
         url (str): the url of the target page to which the hypothes.is post should be linked to.
+        doi (str): the doi of the tarrget preprint.
         title (str): the title of the target page
     """
-    def __init__(self, url:str, title:str):
+    def __init__(self, url:str, doi: str, title:str):
         self.url = url
+        self.doi = doi
         self.title = title
 
 def post_one(permissions:PermissionsHelper, groupid:str, target:Target, post:HypoPost) -> Dict:
@@ -146,12 +148,14 @@ def post_one(permissions:PermissionsHelper, groupid:str, target:Target, post:Hyp
     Returns:
         The response from the hypothes.is REST API to the request.
     """
-    response: Dict = HYPO.annotations.create(
+    highwire = HYPO.helpers.highwire(doi=[target.doi])
+    document = HYPO.helpers.documents(title=target.title, highwire=highwire)
+    response = HYPO.annotations.create(
         target.url,
         permissions=permissions,
         text=post.annotation_text,
         tags=post.tags,
-        document=HYPO.helpers.documents(title=target.title),
+        document=document,
         group=groupid
     )
     return response
