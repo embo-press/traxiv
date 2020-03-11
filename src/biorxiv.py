@@ -8,7 +8,7 @@ import requests
 from datetime import date
 import time
 from typing import List
-from .utils import resolve
+from .utils import resolve, progress
 from .toolbox import Preprint
 
 
@@ -53,6 +53,7 @@ def retrieve(prefix:str, start_date:str, end_date:str) -> List[Preprint]:
             if message['status'] == 'ok':
                 count = int(message['count'])
                 total = int(message['total'])
+                print(f"response received ({count} preprints)")
                 cursor += count
                 remaining = total - count
                 results += [Preprint(**j) for j in response['collection']]
@@ -64,20 +65,48 @@ def retrieve(prefix:str, start_date:str, end_date:str) -> List[Preprint]:
         time.sleep(0.1)
     return results
 
+def details(preprints: List[Preprint]) -> List[Preprint]:
+    biorxiv_details_api = "https://api.biorxiv.org/detail"
+    N = len(preprints)
+    for i, p in enumerate(preprints):
+        doi = p.biorxiv_doi
+        url = "/".join([biorxiv_details_api, doi])
+        progress(i, N, f"{url}")
+        response = requests.get(url)
+        if response.status_code == 200:
+            response = response.json()
+            if response.get('collection'):
+                first_match = response.get('collection')[0]
+                p.corr_author = first_match.get('author_corresponding')
+                p.institution = first_match.get('author_corresponding_institution')
+            else:
+                print(f"WARNING: {url} did not retrieve any preprint!")
+                p.corr_author = ""
+                p.institution = ""
+    return preprints # not really needed since mutable
+
+
 def main():
-    parser = argparse.ArgumentParser( description="Retrieves bioRxiv preprint for journal")
+    parser = argparse.ArgumentParser( description="Retrieves bioRxiv preprint for journal", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('prefix', nargs="?", default="10.15252", help="The prefix of the publisher.")
     parser.add_argument('--start', default='2019-01-01', help="Start date for the search (format YYYY-MM-DD)")
     parser.add_argument('--end', default=str(date.today()), help="End date for the search (format YYYY-MM-DD)")
+    parser.add_argument('--delimiter', default="\t", help="Column delimiter in the output (use $'\t' syntax in bash for backslash escaped characters).")
     args = parser.parse_args()
     prefix =args.prefix
     start = args.start
     end = args.end
-    results = retrieve(prefix, start, end)
+    delimiter = args.delimiter
 
-    print("biorxiv_doi\tpublished_doi\tcategory")
+    results = retrieve(prefix, start, end)
+    results = details(results)
+
+    header = delimiter.join(["biorxiv_doi", "published_doi", "category", "corr_author", "institution"])
+    print(header)
     for preprint in results:
-        print(preprint.biorxiv_doi, preprint.published_doi, preprint.preprint_category)
+        row = delimiter.join([preprint.biorxiv_doi, preprint.published_doi, preprint.preprint_category, preprint.corr_author, preprint.institution])
+        print(row)
+    print(f"\nTOTAL: {len(results)}")
 
 if __name__ == "__main__":
     main()
