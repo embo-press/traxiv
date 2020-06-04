@@ -13,7 +13,6 @@ It illustrates the use of:
 - bioRxiv REST API for publishers: https://api.biorxiv.org/publisher
 - the python binding to the hypothe.is API: https://github.com/embo-press/hypothepy
 - crossref metadata: https://doi.org
-- a cloud-based [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) database to cache intermediate results and allow recovery from network interruptions.
 
 ## Getting started
 
@@ -23,7 +22,7 @@ Install and activate the python virtual environment:
     source .venv/bin/activate
     pip install -r requirements.txt
 
-Credentials to your hypothes.is account and MongoDB databases should be stored in an `.env` file by editing the provided `.env.example` file. 
+Credentials to your hypothes.is account should be stored in an `.env` file by editing the provided `.env.example` file. 
 
 **⚠️ Do NOT add, commit or push your `.env` file since it contains your private personal credentials.**
 

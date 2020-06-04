@@ -4,11 +4,9 @@ Removes all the hypothes.is posts linked to a user and group and purges the coll
 
 import argparse
 import os
-from .db import MongoPreprints
 from . import HYPO, HYPOTHESIS_USER
 from .utils import progress, get_groupid
 
-MG = MongoPreprints(HYPOTHESIS_USER)
 
 def purge(user, groupid: str, limit: int):
     """
@@ -31,12 +29,9 @@ def purge(user, groupid: str, limit: int):
         progress(i, N, f"{id}  ")
         response = HYPO.annotations.delete(id)
         if response.status_code == 200:
-            MG.delete_one(id) # catch exception if not in MG?
             delete_count += 1
     print(f"Purged {delete_count} records from {groupid}")
     print(f"{total - delete_count} remaining")
-    if MG.count() == 0:
-        MG.drop()
 
 
 def main():
@@ -49,7 +44,6 @@ def main():
     limit = args.limit
     groupid = get_groupid(group_name, document_uri="https://www.biorxiv.org") # important to add uri to retrieve public groups!
     if groupid:
-        MG.collection(groupid)
         purge(HYPOTHESIS_USER, groupid, limit=limit)
     else:
         print(f"Could not find group: {group_name}")

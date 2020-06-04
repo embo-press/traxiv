@@ -1,4 +1,3 @@
 requests
-pymongo[tls,srv]
 python-dotenv
 hypothepy==0.3.0
