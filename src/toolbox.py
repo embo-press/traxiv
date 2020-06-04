@@ -45,7 +45,9 @@ class Preprint(AsDict):
         preprint_category='',
         preprint_date='',
         published_date='',
-        published_citation_count=''
+        published_citation_count='',
+        corr_author='',
+        institution='',
     ):
         self.biorxiv_doi = biorxiv_doi
         self.biorxiv_url = biorxiv_url
@@ -55,6 +57,9 @@ class Preprint(AsDict):
         self.preprint_date = preprint_date
         self.published_date = published_date
         self.published_citation_count = published_citation_count
+        self.corr_author = corr_author
+        self.institution = institution
+
 
 
 class Published(AsDict):
@@ -83,10 +88,9 @@ class Published(AsDict):
 
         self.doi: str = doi
         crossref_metadata = info(self.doi)
-        self.journal: str = crossref_metadata['container-title']
+        self.journal: str = crossref_metadata.get('container-title', '')
         self.subject: List = []
-        if 'subject' in crossref_metadata:
-            self.subject = crossref_metadata['subject'] # seems to be the broad subject of the _journal_ where the paper was published
+        self.subject = crossref_metadata.get('subject', '') # seems to be the broad subject of the _journal_ where the paper was published
 
 class HypoPost(AsDict):
     """
@@ -159,3 +163,27 @@ def post_one(permissions:PermissionsHelper, groupid:str, target:Target, post:Hyp
         group=groupid
     )
     return response
+
+def exists(groupid:str, doi:str) -> bool:
+    """
+    Check if annotations from a given group already exists for a given doi.
+
+    Arguments:
+       groupid (str): the groupid of the group who has potentially posted annotations
+       doi (str): the doi (ie '10.01010/123456')
+
+    Returns:
+       true if there is already some annotations, false if nothing is found for this doi from this group, None if the request failed
+    """
+
+    uri = f"doi:{doi}"
+    response = HYPO.annotations.search(
+        uri=uri,
+        group=groupid
+    )
+    if response.status_code == 200:
+        j = response.json()
+        found_it = j['total'] > 0
+    else:
+        fount_it = None
+    return found_it
