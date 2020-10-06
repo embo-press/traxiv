@@ -5,7 +5,6 @@ The pre-prepared posts are cached in a MongDB and finally posted in a specific g
 """
 
 import argparse
-import requests
 from datetime import date
 import time
 import re
@@ -15,9 +14,10 @@ from typing import List, Dict
 from . import HYPO, HYPOTHESIS_USER
 from .biorxiv import retrieve
 from .rpf import generate_rpf_link
-from .utils import resolve, info, progress, get_groupid
+from .utils import resolve, info, progress, get_groupid, RetrySession
 from .toolbox import Preprint, Published, HypoPost, Target, post_one, exists
 from .template import embo_press_template, banners
+
 
 
 class HypoPostRPF(HypoPost):
@@ -183,7 +183,7 @@ class Traxiv:
             print(f"Retrieving preprints for {', '.join(prefixes)} from bioRxiv.")
             preprints = self.retrieve_preprints(prefixes, start_date, end_date)
 
-            print(f"Genrating posts by resolving dois and generating RPF links.")
+            print(f"Generating posts by resolving dois and generating RPF links.")
             posts = self.generate(preprints, journals)
 
             print(f"Posting to hypothes.is group {self.groupid}")

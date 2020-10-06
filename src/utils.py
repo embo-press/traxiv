@@ -3,10 +3,45 @@ A few simple utility fuctions.
 """
 
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 from typing import Dict
 from . import HYPO
 
 DOI_ORG = "https://doi.org"
+
+class RetrySession:
+    def __init__(self):
+        self.retry = self.requests_retry_session()
+        # self.retry.headers.update({"Accept": "application/json"})
+
+    @staticmethod
+    def requests_retry_session(
+        retries=3,
+        backoff_factor=0.3,
+        status_forcelist=(500, 502, 504),
+        session=None,
+    ):
+        # from  https://www.peterbe.com/plog/best-practice-with-retries-with-requests
+        session = session or requests.Session()
+        retry = Retry(
+            total=retries,
+            read=retries,
+            connect=retries,
+            backoff_factor=backoff_factor,
+            status_forcelist=status_forcelist,
+        )
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        return session
+
+
+def funcname(self, parameter_list):
+    """
+    docstring
+    """
+    raise NotImplementedError
 
 def get_groupid(group_name: str, document_uri: str='') -> str:
     """
@@ -45,7 +80,7 @@ def resolve(doi:str) -> str:
     Returns:
         str: the url to which the doi resolves to.
     """
-    response = requests.get(f"{DOI_ORG}/{doi}")
+    response = RetrySession().retry.get(f"{DOI_ORG}/{doi}")
     if response.status_code:
         link = response.url
     else:
@@ -64,7 +99,8 @@ def info(doi: str) -> Dict:
         Dict: the full json response returned by CrossRef.
     """
     headers = {"Accept": "application/json"}
-    response = requests.get(f"{DOI_ORG}/{doi}", headers=headers)
+    retry_session = RetrySession()
+    response = retry_session.retry.get(f"{DOI_ORG}/{doi}", headers=headers)
     if response.status_code == 200:
         crossref_json =  response.json()
     else:
