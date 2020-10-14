@@ -13,7 +13,7 @@ DOI_ORG = "https://doi.org"
 class RetrySession:
     def __init__(self):
         self.retry = self.requests_retry_session()
-        # self.retry.headers.update({"Accept": "application/json"})
+        self.retry.headers.update({"From": "thomas.lemberger@embo.org"})  # being polite?
 
     @staticmethod
     def requests_retry_session(
