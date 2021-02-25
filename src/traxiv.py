@@ -208,6 +208,7 @@ def main():
     start_date = args.start
     end_date = args.end
     group_name = args.group
+    logger.info(f"starting traxiv retrieval")
 
     Traxiv(group_name).post_all(prefixes, journals, start_date, end_date)
 

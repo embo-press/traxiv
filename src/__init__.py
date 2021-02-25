@@ -19,7 +19,7 @@ if not log_dir.exists():
 log_path = log_dir / log_file
 fh = logging.FileHandler(log_path)
 fh.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', "%Y-%m-%d %H:%M:%S")
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 sh = logging.StreamHandler()
