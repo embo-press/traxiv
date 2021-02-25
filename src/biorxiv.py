@@ -10,6 +10,7 @@ import time
 from typing import List
 from .utils import resolve, progress
 from .toolbox import Preprint
+from . import logger
 
 
 def retrieve(prefix:str, start_date:str, end_date:str) -> List[Preprint]:
@@ -45,7 +46,7 @@ def retrieve(prefix:str, start_date:str, end_date:str) -> List[Preprint]:
     remaining = 1
     while remaining > 0:
         url = "/".join([biorxiv_api, prefix, start_date, end_date, str(cursor)])
-        print("bioRxiv request:", url)
+        logger.info(f"bioRxiv request: {url}")
         response = requests.get(url)
         if response.status_code == 200:
             response = response.json()
@@ -53,14 +54,14 @@ def retrieve(prefix:str, start_date:str, end_date:str) -> List[Preprint]:
             if message['status'] == 'ok':
                 count = int(message['count'])
                 total = int(message['total'])
-                print(f"response received ({count} preprints)")
+                logger.info(f"response received ({count} preprints)")
                 cursor += count
                 remaining = total - count
                 results += [Preprint(**j) for j in response['collection']]
             else:
                 remaining = 0
         else:
-            print(f'⚠️ Problem with bioRxiv api, status_code={response.status_code}')
+            logger.error(f"⚠️ Problem with bioRxiv api, status_code={response.status_code}")
             remaining = 0
         time.sleep(0.1)
     return results
@@ -80,7 +81,7 @@ def details(preprints: List[Preprint]) -> List[Preprint]:
                 p.corr_author = first_match.get('author_corresponding')
                 p.institution = first_match.get('author_corresponding_institution')
             else:
-                print(f"WARNING: {url} did not retrieve any preprint!")
+                logger.warning(f"{url} did not retrieve any preprint!")
                 p.corr_author = ""
                 p.institution = ""
     return preprints # not really needed since mutable
