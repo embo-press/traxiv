@@ -28,6 +28,7 @@ class RPFLinkAbstract:
     # But we don't... so, here it goes:
     # https://www.embopress.org/action/downloadSupplement?doi=10.15252/embj.2019102578&file=embj2019102578.reviewer_comments.pdf
     # https://www.embopress.org/action/downloadSupplement?doi=10.15252/msb.20198849&file=msb198849.reviewer_comments.pdf
+    # https://www.embopress.org/action/downloadSupplement?doi=10.15252/msb.202010025&file=msb202010025.reviewer_comments.pdf
     # https://www.embopress.org/action/downloadSupplement?doi=10.15252/embr.201847097&file=embr201847097.reviewer_comments.pdf
     # https://www.embopress.org/action/downloadSupplement?doi=10.15252/emmm.201910291&file=emmm201910291.reviewer_comments.pdf
     # https://www.life-science-alliance.org/content/lsa/2/4/e201900445.reviewer-comments.pdf
@@ -48,7 +49,7 @@ class RPFLinkAbstract:
         return self._test(link)
 
 
-class RPFLinkEjErEmm(RPFLinkAbstract):
+class RPFLinkEjErEmmMsb(RPFLinkAbstract):
     """
     The class that generates RPF links for EMBO Journal, EMBO reports and EMBO Molecular Medicine.
     """
@@ -59,14 +60,15 @@ class RPFLinkEjErEmm(RPFLinkAbstract):
         return link
 
 
-class RPFLinkMSB(RPFLinkAbstract):
-    """
-    The class that generates RPF links for Molecular Systems Biology.
-    """
-    def _generate_link(self, doi: str) -> str:
-        suffix_without_dot_truncated_year =re.sub(r'^10.\d{4,9}/([-_;()/:a-zA-Z0-9]+)\.\d\d([-_;()/:a-zA-Z0-9]+)', r'\1\2', doi)
-        link = f"https://www.embopress.org/action/downloadSupplement?doi={doi}&file={suffix_without_dot_truncated_year}.reviewer_comments.pdf"
-        return link
+# deprecated
+# class RPFLinkMSB(RPFLinkAbstract):
+#     """
+#     The class that generates RPF links for Molecular Systems Biology.
+#     """
+#     def _generate_link(self, doi: str) -> str:
+#         suffix_without_dot_truncated_year =re.sub(r'^10.\d{4,9}/([-_;()/:a-zA-Z0-9]+)\.\d\d([-_;()/:a-zA-Z0-9]+)', r'\1\2', doi)
+#         link = f"https://www.embopress.org/action/downloadSupplement?doi={doi}&file={suffix_without_dot_truncated_year}.reviewer_comments.pdf"
+#         return link
 
 
 class RPFLinkLSA(RPFLinkAbstract):
@@ -93,10 +95,8 @@ def generate_rpf_link(journal: str, doi: str) -> str:
     """
 
     journal = journal.strip().lower()
-    if journal in ['the embo journal', 'embo reports', 'embo molecular medicine']:
-        resolver = RPFLinkEjErEmm()
-    elif journal == 'molecular systems biology':
-        resolver = RPFLinkMSB()
+    if journal in ['the embo journal', 'embo reports', 'embo molecular medicine', 'molecular systems biology']:
+        resolver = RPFLinkEjErEmmMsb()
     elif journal == 'life science alliance':
         resolver = RPFLinkLSA()
     else:

@@ -9,15 +9,16 @@ from datetime import date
 import time
 import re
 from string import Template
-from pprint import pprint
+from pprint import pformat
 from typing import List, Dict
+
 from . import HYPO, HYPOTHESIS_USER
 from .biorxiv import retrieve
 from .rpf import generate_rpf_link
 from .utils import resolve, info, progress, get_groupid, RetrySession
 from .toolbox import Preprint, Published, HypoPost, Target, post_one, exists
 from .template import embo_press_template, banners
-
+from . import logger
 
 
 class HypoPostRPF(HypoPost):
@@ -74,10 +75,10 @@ class Traxiv:
         self.group_name = group_name
         self.groupid = get_groupid(self.group_name, document_uri="https://www.biorxiv.org") # important to add uri to retrieve public groups!
         if self.groupid:
-            print(f"Group {self.group_name} has groupid {self.groupid}")
+            logger.info(f"Group {self.group_name} has groupid {self.groupid}")
         else:
-            print(f"Could not find groupid for group: {group_name}")
-            print(f"Nothing can be posted.")
+            logger.error(f"Could not find groupid for group: {group_name}")
+            logger.error(f"Nothing can be posted.")
 
 
     def retrieve_preprints(self, prefixes: List, start_date: str, end_date: str) -> List[Preprint]:
@@ -93,7 +94,7 @@ class Traxiv:
         preprints: List[Preprint] = []
         for prefix in prefixes:
             retrieved = retrieve(prefix, start_date, end_date)
-            print(f'Found {len(retrieved)} preprints from {prefix}.')
+            logger.info(f'Found {len(retrieved)} preprints from {prefix}.')
             preprints += retrieved
         return preprints
 
@@ -130,8 +131,9 @@ class Traxiv:
             else:
                 not_generated.append({'doi': prepr.biorxiv_doi, 'reason': f'pre_existing={pre_existing}'})
         if not_generated:
-            print(f"{len(not_generated)} records were NOT generated:")
-            pprint(not_generated)
+            logger.info(f"{len(not_generated)} records were NOT generated:")
+            for x in not_generated:
+                logger.info(f"{x}")
         return posts
 
     def post(self, groupid: str, posts:  List[Dict[HypoPostRPF, Target]]) -> int:
@@ -161,7 +163,7 @@ class Traxiv:
                 posted += 1
             else:
                 hyp_id = ''
-                print(response.text)
+                logger.info(response.text)
             time.sleep(0.1)
         return posted
 
@@ -180,16 +182,16 @@ class Traxiv:
 
     
         if self.groupid:
-            print(f"Retrieving preprints for {', '.join(prefixes)} from bioRxiv.")
+            logger.info(f"Retrieving preprints for {', '.join(prefixes)} from bioRxiv.")
             preprints = self.retrieve_preprints(prefixes, start_date, end_date)
 
-            print(f"Generating posts by resolving dois and generating RPF links.")
+            logger.info(f"Generating posts by resolving dois and generating RPF links.")
             posts = self.generate(preprints, journals)
 
-            print(f"Posting to hypothes.is group {self.groupid}")
+            logger.info(f"Posting to hypothes.is group {self.groupid}")
             posted = self.post(self.groupid, posts)
 
-            print(f"Posted {posted} records")
+            logger.info(f"Posted {posted} records")
 
 
 def main():

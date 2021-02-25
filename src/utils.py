@@ -5,8 +5,9 @@ A few simple utility fuctions.
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+from urllib3.exceptions import MaxRetryError
 from typing import Dict
-from . import HYPO
+from . import HYPO, logger
 
 DOI_ORG = "https://doi.org"
 
@@ -36,12 +37,6 @@ class RetrySession:
         session.mount('https://', adapter)
         return session
 
-
-def funcname(self, parameter_list):
-    """
-    docstring
-    """
-    raise NotImplementedError
 
 def get_groupid(group_name: str, document_uri: str='') -> str:
     """
@@ -100,7 +95,16 @@ def info(doi: str) -> Dict:
     """
     headers = {"Accept": "application/json"}
     retry_session = RetrySession()
-    response = retry_session.retry.get(f"{DOI_ORG}/{doi}", headers=headers)
+    try:
+        url = f"{DOI_ORG}/{doi}"
+        response = retry_session.retry.get(url, headers=headers)
+    except MaxRetryError:
+        logger.error(f"problem with respone to url: {url}")
+        logger.info("waiting for 10 (yes, ten!) minutes.")
+        sleep(10 * 60) # loooong wait before the last chance
+        logger.info("trying again...wish us luck!")
+        response = retry_session.retry.get(f"{DOI_ORG}/{doi}", headers=headers)
+
     if response.status_code == 200:
         crossref_json =  response.json()
     else:
