@@ -12,6 +12,8 @@ HYPO = HypoApi(HYPOTHESIS_API_KEY, HYPOTHESIS_USER)
 
 logger = logging.getLogger('traxiv logger')
 logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', "%y-%m-%d %H:%M:%S")
+
 log_dir = Path('./log')
 log_file = Path('traxiv.log')
 if not log_dir.exists():
@@ -19,9 +21,9 @@ if not log_dir.exists():
 log_path = log_dir / log_file
 fh = logging.FileHandler(log_path)
 fh.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', "%Y-%m-%d %H:%M:%S")
 fh.setFormatter(formatter)
 logger.addHandler(fh)
+
 sh = logging.StreamHandler()
 sh.setLevel(logging.INFO)
 sh.setFormatter(formatter)
