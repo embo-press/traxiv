@@ -36,17 +36,8 @@ class RPFLinkAbstract:
     def _generate_link(self, doi: str) -> str:
         raise NotImplementedError
 
-    def _test(self, link: str) -> bool:
-        if link:
-            test = requests.get(link)
-            link = link if 'application/pdf' in test.headers['Content-Type'] else ''
-        else:
-            link = ''
-        return link
-
     def __call__(self, doi: str) -> str:
-        link = self._generate_link(doi)
-        return self._test(link)
+        return self._generate_link(doi)
 
 
 class RPFLinkEjErEmmMsb(RPFLinkAbstract):
